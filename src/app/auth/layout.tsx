@@ -1,0 +1,18 @@
+"use client"
+
+import ColorModeSwitcherButton from "@/components/ColorModeSwitcherButton";
+import { useUser } from "@clerk/nextjs";
+import { useRouter } from "next/navigation";
+
+export default function AuthLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter()
+
+  const { isSignedIn } = useUser()
+  if (isSignedIn) router.push("/dashboard")
+  return (
+    <>
+      <ColorModeSwitcherButton />
+      {children}
+    </>
+  )
+}
