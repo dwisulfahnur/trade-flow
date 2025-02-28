@@ -35,7 +35,6 @@ import { useColorModeValue } from '@/components/ui/color-mode';
 import { useAuth, useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 
-
 interface LinkItemProps {
   name: string;
   icon: IconType;
@@ -124,6 +123,8 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
     setIsMounted(true);
   }, []);
 
+  const bg = useColorModeValue('white', 'gray.900')
+  const borderBottomColor = useColorModeValue('gray.200', 'gray.700')
   if (!isMounted) {
     return null; // Prevent rendering until mounted
   }
@@ -134,9 +135,9 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
       px={4}
       height="20"
       alignItems="center"
-      bg={useColorModeValue('white', 'gray.900')}
+      bg={bg}
       borderBottomWidth="1px"
-      borderBottomColor={useColorModeValue('gray.200', 'gray.700')}
+      borderBottomColor={borderBottomColor}
       justifyContent={{ base: 'space-between', md: 'flex-end' }}
       {...rest}
     >
@@ -178,7 +179,6 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
   );
 };
 
-
 const AdminLayout = ({ children }: { children: React.ReactNode }) => {
   const { open, onOpen, onClose } = useDisclosure();
   const [isMounted, setIsMounted] = useState(false);
@@ -187,12 +187,13 @@ const AdminLayout = ({ children }: { children: React.ReactNode }) => {
     setIsMounted(true);
   }, []);
 
+  const bg = useColorModeValue('white', 'gray.900')
   if (!isMounted) {
     return null; // Prevent rendering until mounted
   }
 
   return (
-    <Box minH="100vh" bg={useColorModeValue('gray.100', 'gray.900')}>
+    <Box minH="100vh" bg={bg}>
       <SidebarContent onClose={onClose} display={{ base: 'none', md: 'block' }} />
       <Drawer.Root open={open} placement={'start'} onOpenChange={onClose} size="full">
         <Drawer.Content>
