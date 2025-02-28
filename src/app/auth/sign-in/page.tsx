@@ -1,12 +1,15 @@
 "use client"
 
-import { Button, Card, Center, Input, Icon, Flex, VStack, Text, Box } from '@chakra-ui/react';
+import { Button, Card, Center, Input, Icon, Flex, VStack, Text, Separator } from '@chakra-ui/react';
 import { Field } from "@/components/ui/field";
 import { useSignIn } from '@clerk/nextjs';
 import { toaster } from '@/components/ui/toaster';
 import { FaFacebook, FaApple } from 'react-icons/fa';
 import { FcGoogle } from 'react-icons/fc';
 import { useForm } from 'react-hook-form';
+import dynamic from 'next/dynamic';
+
+const Toaster = dynamic(() => import('@/components/ui/toaster').then(mod => mod.Toaster), { ssr: false });
 
 interface SignInFormInputs {
   email: string;
@@ -32,9 +35,10 @@ export default function SignInPage() {
         duration: 3000,
       });
     } catch (error) {
+      console.error(error);
       toaster.create({
         title: "Sign in failed.",
-        description: error as string,
+        description: 'Invalid email or password.',
         type: "error",
         duration: 3000,
       });
@@ -49,11 +53,11 @@ export default function SignInPage() {
         redirectUrl: '/auth/sign-in',
         redirectUrlComplete: '/dashboard'
       });
-      toaster.create({
-        title: `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign in successful.`,
-        type: "success",
-        duration: 3000,
-      });
+      // toaster.create({
+      //   title: `${provider.charAt(0).toUpperCase() + provider.slice(1)} sign in successful.`,
+      //   type: "success",
+      //   duration: 3000,
+      // });
     } catch (error) {
       console.error(error);
       toaster.create({
@@ -67,6 +71,7 @@ export default function SignInPage() {
 
   return (
     <Center minH={'100vh'}>
+      <Toaster />
       <Card.Root w={{ base: '90%', md: '60%', lg: '30%' }}>
         <Card.Body spaceY={4}>
           <Flex as='form' flexDir={'column'} onSubmit={handleSubmit(handleSignIn)} gap={4}>
@@ -87,10 +92,10 @@ export default function SignInPage() {
               Sign In
             </Button>
           </Flex>
-          <Flex alignItems={'center'} justifyContent={'center'}>
-            <Box flex="1" height="1px" bg="gray.300" mx={2} />
-            <Text textAlign={'center'}>OR</Text>
-            <Box flex="1" height="1px" bg="gray.300" mx={2} />
+          <Flex alignItems={'center'} justifyContent={'center'} gap={2}>
+            <Separator flex="1" />
+            <Text textAlign={'center'} color={'gray.500'} fontSize={'sm'}>OR</Text>
+            <Separator flex="1" />
           </Flex>
           <VStack mt={4} w='full'>
             <Button

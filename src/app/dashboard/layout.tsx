@@ -1,10 +1,11 @@
 "use client"
 
 import ColorModeSwitcherButton from "@/components/ColorModeSwitcherButton";
-import AdminLayout from "@/components/dashboard/AdminLayout";
+import AuthenticatedNavbar from "@/components/common/AuthenticatedNavbar";
+import { Box } from "@chakra-ui/react";
 import { useAuth } from "@clerk/nextjs";
 import { redirect } from "next/navigation";
-import { useEffect } from "react";
+import { Fragment, useEffect } from "react";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { isSignedIn, isLoaded } = useAuth()
@@ -14,9 +15,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [isSignedIn, isLoaded])
   return (
-    <AdminLayout>
-      {children}
+    <Fragment>
+      <AuthenticatedNavbar />
+      <Box pt={'70px'} w='full' minH='100vh'>
+        {children}
+      </Box>
       <ColorModeSwitcherButton />
-    </AdminLayout>
+    </Fragment>
   )
 }

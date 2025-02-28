@@ -158,7 +158,7 @@ const MobileNav = ({ onOpen, ...rest }: MobileProps) => {
                     Admin
                   </Text>
                 </VStack>
-                <Avatar.Root size={'sm'}>
+                <Avatar.Root size={'sm'} cursor={'pointer'}>
                   <Avatar.Image src={'https://images.unsplash.com/photo-1619946794135-5bc917a27793'} />
                 </Avatar.Root>
                 {/* <Box>
