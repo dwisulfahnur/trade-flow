@@ -1,5 +1,4 @@
-import { Center, Text } from "@chakra-ui/react";
-import AdminLayout from '@/components/dashboard/AdminLayout';
+import { Text } from "@chakra-ui/react";
 
 export default function DashboardPage() {
   return (

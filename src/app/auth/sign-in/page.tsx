@@ -1,8 +1,7 @@
 "use client"
 
-import { useState } from 'react';
 import { Button, Card, Center, Input, Icon, Flex, VStack, Text, Box } from '@chakra-ui/react';
-import { Field } from "@/components/ui/field"
+import { Field } from "@/components/ui/field";
 import { useSignIn } from '@clerk/nextjs';
 import { toaster } from '@/components/ui/toaster';
 import { FaFacebook, FaApple } from 'react-icons/fa';
