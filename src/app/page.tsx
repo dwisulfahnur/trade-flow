@@ -1,8 +1,8 @@
 "use client"
 
-import { Box, Button, Center, Container, Flex, Heading, Text, Card, SimpleGrid, VStack } from "@chakra-ui/react";
-import { FiArrowRight } from "react-icons/fi";
-import { Icon } from "@chakra-ui/react";
+import { Box, Button, Center, Container, Flex, Heading, Text, Card, SimpleGrid, VStack, HStack, Icon, Link, Separator } from "@chakra-ui/react";
+import { FiArrowRight, FiGithub, FiTwitter, FiLinkedin, FiInstagram } from "react-icons/fi";
+import { Icon as ChakraIcon } from "@chakra-ui/react";
 import { LuChartLine, LuLock, LuLayers, LuBookOpen } from "react-icons/lu";
 import { BsLightning } from "react-icons/bs";
 import { HiOutlineDocument } from "react-icons/hi";
@@ -28,7 +28,7 @@ const FEATURES = [
   },
   {
     icon: BsLightning,
-    title: 'Real-time Trackin',
+    title: 'Real-time Tracking',
     description: 'Keep tabs on your open positions and get insights as the market moves.',
   },
   {
@@ -43,7 +43,50 @@ const FEATURES = [
   }
 ]
 
+const FOOTER_LINKS = [
+  {
+    title: 'Product',
+    links: [
+      { label: 'Features', href: '#features' },
+      { label: 'Pricing', href: '/pricing' },
+      { label: 'Testimonials', href: '/testimonials' },
+      { label: 'FAQ', href: '/faq' },
+    ]
+  },
+  {
+    title: 'Company',
+    links: [
+      { label: 'About', href: '/about' },
+      { label: 'Blog', href: '/blog' },
+      { label: 'Careers', href: '/careers' },
+      { label: 'Contact', href: '/contact' },
+    ]
+  },
+  {
+    title: 'Resources',
+    links: [
+      { label: 'Documentation', href: '/docs' },
+      { label: 'API', href: '/api' },
+      { label: 'Guides', href: '/guides' },
+      { label: 'Support', href: '/support' },
+    ]
+  },
+  {
+    title: 'Legal',
+    links: [
+      { label: 'Privacy', href: '/privacy' },
+      { label: 'Terms', href: '/terms' },
+      { label: 'Security', href: '/security' },
+    ]
+  }
+]
+
 export default function IndexPage() {
+  const footerBg = useColorModeValue('gray.50', 'gray.900');
+  const footerBorderColor = useColorModeValue('gray.200', 'gray.700');
+  const footerTextColor = useColorModeValue('gray.600', 'gray.400');
+  const footerHeadingColor = useColorModeValue('gray.700', 'gray.300');
+
   return (
     <>
       <Navbar />
@@ -57,7 +100,7 @@ export default function IndexPage() {
                 <Button alignItems={'center'} gap={2} px={8} asChild>
                   <NextLink href={'/auth/sign-in'}>
                     Get Started for Free
-                    <Icon as={FiArrowRight} />
+                    <ChakraIcon as={FiArrowRight} />
                   </NextLink>
                 </Button>
                 <Button variant={'outline'} alignItems={'center'} gap={2} px={8}>
@@ -67,7 +110,7 @@ export default function IndexPage() {
             </Flex>
           </Container>
         </Center>
-        <Center flexDirection={'column'} w='full' minH='calc(100vh - 200px)'>
+        <Center flexDirection={'column'} w='full' minH='calc(100vh - 200px)' id="features">
           <Container maxW={'container.xl'}>
             <VStack gap={4} alignItems={'center'}>
               <Heading fontSize={'4xl'} fontWeight={500} textAlign={'center'}>Powerful Features for Traders</Heading>
@@ -77,11 +120,13 @@ export default function IndexPage() {
               {FEATURES.map((feature, index) => (
                 <Card.Root key={index} boxShadow={'lg'}>
                   <Card.Header justifyContent={'center'} alignItems={'center'} gap={4}>
-                    <Icon as={feature.icon} w={10} h={10} />
+                    <ChakraIcon as={feature.icon} w={10} h={10} />
                     <Heading fontSize={'1xl'} fontWeight={500} textAlign={'center'}>{feature.title}</Heading>
                   </Card.Header>
                   <Card.Body>
-                    <Text fontSize={'md'} fontWeight={400} color={'gray.500'} maxW={'600px'} textAlign={'center'}>Visualize your trading performance with advanced charts and metrics that help identify patterns.</Text>
+                    <Text fontSize={'md'} fontWeight={400} color={'gray.500'} maxW={'600px'} textAlign={'center'}>
+                      {feature.description}
+                    </Text>
                   </Card.Body>
                 </Card.Root>
               ))}
@@ -96,12 +141,71 @@ export default function IndexPage() {
               <NextLink href={'/auth/sign-in'}>
                 <Button variant={'outline'} bg={useColorModeValue('gray.200', 'gray.900')} alignItems={'center'} gap={2} px={8}>
                   Get Started Now
-                  <Icon as={FiArrowRight} />
+                  <ChakraIcon as={FiArrowRight} />
                 </Button>
               </NextLink>
             </VStack>
           </Container>
         </Center>
+
+        {/* Footer */}
+        <Box as="footer" bg={footerBg} borderTopWidth="1px" borderColor={footerBorderColor}>
+          <Container maxW="container.xl" py={10}>
+            <SimpleGrid columns={{ base: 1, sm: 2, md: 4 }} gap={8} mb={10}>
+              {FOOTER_LINKS.map((group) => (
+                <VStack key={group.title} align="flex-start" gap={3}>
+                  <Text fontWeight="600" fontSize="md" color={footerHeadingColor}>
+                    {group.title}
+                  </Text>
+                  {group.links.map((link) => (
+                    <Link
+                      key={link.label}
+                      href={link.href}
+                      fontSize="sm"
+                      color={footerTextColor}
+                      _hover={{ color: 'blue.500' }}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </VStack>
+              ))}
+            </SimpleGrid>
+
+            <Separator mb={6} borderColor={footerBorderColor} />
+
+            <Flex
+              direction={{ base: 'column', md: 'row' }}
+              justify="space-between"
+              align={{ base: 'center', md: 'center' }}
+              gap={4}
+            >
+              <Flex align="center" gap={2}>
+                <ChakraIcon as={LuChartLine} w={6} h={6} />
+                <Text fontWeight="bold" fontSize="lg">TradeFlow</Text>
+              </Flex>
+
+              <HStack spaceX={4}>
+                <Link href="https://github.com" target="_blank">
+                  <ChakraIcon as={FiGithub} w={5} h={5} color={footerTextColor} />
+                </Link>
+                <Link href="https://twitter.com" target="_blank">
+                  <ChakraIcon as={FiTwitter} w={5} h={5} color={footerTextColor} />
+                </Link>
+                <Link href="https://linkedin.com" target="_blank">
+                  <ChakraIcon as={FiLinkedin} w={5} h={5} color={footerTextColor} />
+                </Link>
+                <Link href="https://instagram.com" target="_blank">
+                  <ChakraIcon as={FiInstagram} w={5} h={5} color={footerTextColor} />
+                </Link>
+              </HStack>
+
+              <Text fontSize="sm" color={footerTextColor}>
+                © {new Date().getFullYear()} TradeFlow. All rights reserved.
+              </Text>
+            </Flex>
+          </Container>
+        </Box>
       </Box>
     </>
   )
