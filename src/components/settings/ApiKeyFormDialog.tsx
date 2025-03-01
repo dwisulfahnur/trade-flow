@@ -112,7 +112,7 @@ export default function ApiKeyFormDialog({ open, onClose, initialData }: ApiKeyF
 
   return (
     <>
-      <DialogRoot open={open} onOpenChange={handleClose}>
+      <DialogRoot open={open} onOpenChange={handleClose} closeOnInteractOutside={false} closeOnEscape={false}>
         <DialogContent>
           <form onSubmit={handleSubmit(onSubmit)}>
             <DialogHeader>
