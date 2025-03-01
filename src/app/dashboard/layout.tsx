@@ -20,7 +20,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <Box pt={'70px'} w='full' minH='100vh'>
         {children}
       </Box>
-      <ColorModeSwitcherButton />
     </Fragment>
   )
 }
