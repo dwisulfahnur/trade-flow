@@ -9,7 +9,6 @@ import { MenuContent, MenuItem, MenuRoot, MenuTrigger } from "@/components/ui/me
 import { useSession } from "@clerk/nextjs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import ApiKeyFormDialog from "./ApiKeyFormDialog";
-import createClerkSupabaseClient from "@/lib/supabase";
 import ApiKeysService from "../../services/supabase/apiKeys";
 import { Database } from "@/types/database.types";
 

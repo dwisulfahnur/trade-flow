@@ -10,7 +10,6 @@ import {
   Button,
   Icon,
   Box,
-  FormatNumber,
   Tabs
 } from "@chakra-ui/react";
 import { FiPlus } from "react-icons/fi";

@@ -45,8 +45,8 @@ export default function ApiKeyFormDialog({ open, onClose, initialData }: ApiKeyF
   useEffect(() => {
     if (initialData) {
       setValue('exchange', initialData.exchange);
-      setValue('apiKey', initialData.apiKey);
-      setValue('secretKey', initialData.secretKey);
+      setValue('apiKey', initialData.api_key);
+      setValue('secretKey', initialData.api_secret);
     }
   }, [initialData, setValue]);
 

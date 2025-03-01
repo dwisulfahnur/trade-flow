@@ -1,7 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { UseSessionReturn } from '@clerk/types'
-import createClerkSupabaseClient from "@/lib/supabase";
 import { Database } from "@/types/database.types";
+import createClerkSupabaseClient from "@/lib/supabase";
 
 class ApiKeysService {
   private supabaseClient: SupabaseClient;

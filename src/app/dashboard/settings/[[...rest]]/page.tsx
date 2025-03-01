@@ -1,8 +1,8 @@
 "use client";
 
 import { useUser, UserProfile } from "@clerk/nextjs";
-import { Flex, Icon, Text } from "@chakra-ui/react";
-import { FaBell, FaKey } from "react-icons/fa";
+import { Flex, Icon } from "@chakra-ui/react";
+import { FaKey } from "react-icons/fa";
 import { useColorMode } from "@/components/ui/color-mode";
 import { dark } from "@clerk/themes";
 import ApiKeySettings from "@/components/settings/ApiKeySettings";
