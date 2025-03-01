@@ -13,7 +13,7 @@ export default function ColorModeSwitcherButton() {
     <IconButton
       right={'18px'}
       bottom={'18px'}
-      position={"absolute"}
+      position={"fixed"}
       onClick={toggleColorMode}
       rounded={'full'}
       aria-label="Toggle color mode"
