@@ -6,6 +6,7 @@ import { FaRegChartBar } from "react-icons/fa";
 import { FiPieChart } from "react-icons/fi";
 import NextLink from "next/link";
 import { useEffect, useState } from "react";
+import { useColorModeValue } from "../ui/color-mode";
 
 const menus = [
   {
@@ -41,6 +42,7 @@ export default function Navbar() {
     };
   }, []);
 
+  const bgColor = useColorModeValue("rgba(255, 255, 255, 0.2)", "rgba(26, 26, 26, 0.2)");
   return (
     <Box
       position={'fixed'}
@@ -50,7 +52,7 @@ export default function Navbar() {
       zIndex={10}
       w={'full'}
       p={4}
-      bg={isScrolled ? "rgba(255, 255, 255, 0.8)" : "transparent"}
+      bg={isScrolled ? bgColor : "transparent"}
       backdropFilter={isScrolled ? "blur(12px)" : "none"}
       transition="background 0.3s ease, backdrop-filter 0.3s ease"
     >

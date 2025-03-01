@@ -8,7 +8,7 @@ import { FaRegChartBar } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { BiBook, BiPieChart } from "react-icons/bi";
 import { usePathname } from "next/navigation";
-
+import { useColorModeValue } from "@/components/ui/color-mode";
 const MENU_ITEMS = [
   { label: 'Dashboard', href: '/dashboard', icon: BiPieChart },
   { label: 'Trade Journal', href: '/dashboard/trade-journal', icon: BiBook },
@@ -34,6 +34,7 @@ export default function AuthenticatedNavbar() {
     };
   }, []);
 
+  const bgColor = useColorModeValue("rgba(255, 255, 255, 0.2)", "rgba(26, 26, 26, 0.2)");
   return (
     <Box
       position={'fixed'}
@@ -43,7 +44,7 @@ export default function AuthenticatedNavbar() {
       zIndex={10}
       w={'full'}
       p={4}
-      bg={isScrolled ? "rgba(255, 255, 255, 0.8)" : "transparent"}
+      bg={isScrolled ? bgColor : "transparent"}
       backdropFilter={isScrolled ? "blur(12px)" : "none"}
       transition="background 0.3s ease, backdrop-filter 0.3s ease"
     >
