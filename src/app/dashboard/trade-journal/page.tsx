@@ -10,14 +10,16 @@ import {
   Button,
   Icon,
   Box,
-  Tabs
+  Tabs,
+  useBreakpointValue,
+  VStack
 } from "@chakra-ui/react";
 import { FiPlus } from "react-icons/fi";
 import TradeJournalForm from "@/components/trade-journal/TradeJournalForm";
 import TradeHistoryTable from "@/components/trade-journal/TradeHistoryTable";
 import TradeCalendar from "@/components/trade-journal/TradeCalendar";
 import StatCard from "@/components/dashboard/StatCard";
-
+import { useColorModeValue } from "@/components/ui/color-mode";
 
 type JournalTabType = "calendar" | "table"
 
@@ -115,7 +117,15 @@ const sampleTrades = [
 export default function TradeJournalPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [trades, setTrades] = useState(sampleTrades);
-  const [activeView, setActiveView] = useState<JournalTabType | null>('table');
+  const [activeView, setActiveView] = useState<JournalTabType>('table');
+
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const isSmallScreen = useBreakpointValue({ base: true, sm: false });
+
+  // Theme colors
+  const bgColor = useColorModeValue("gray.50", "gray.900");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+  const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
 
   const handleAddTrade = (newTrade: any) => {
     setTrades([
@@ -133,56 +143,96 @@ export default function TradeJournalPage() {
   const totalPnl = trades.reduce((sum, trade) => sum + trade.pnl, 0);
 
   return (
-    <Container maxW="container.xl" py={8}>
-      <Flex flexDir="column" gap={6}>
-        <Flex justifyContent="space-between" alignItems="center">
-          <Box>
-            <Text fontWeight={500} fontSize="2xl">Trade Journal</Text>
-            <Text fontSize="md" color="gray.500">Track and analyze your trading decisions</Text>
+    <Container
+      maxW="container.xl"
+      py={{ base: 3, md: 6 }}
+      px={{ base: 2, sm: 4, md: 6 }}
+      minH="calc(100vh - 64px)"
+      bg={bgColor}
+    >
+      <VStack spaceY={{ base: 4, md: 6 }} align="stretch" w="full">
+        {/* Header Section */}
+        <Flex
+          justifyContent="space-between"
+          alignItems={{ base: "flex-start", md: "center" }}
+          flexDirection={{ base: "column", md: "row" }}
+          gap={{ base: 3, md: 0 }}
+          w="full"
+        >
+          <Box mb={{ base: 2, md: 0 }}>
+            <Text
+              fontWeight="600"
+              fontSize={{ base: "xl", md: "2xl" }}
+              color={textColor}
+            >
+              Trade Journal
+            </Text>
+            <Text
+              fontSize={{ base: "sm", md: "md" }}
+              color={secondaryTextColor}
+            >
+              Track and analyze your trading decisions
+            </Text>
           </Box>
-          <Flex gap={4}>
-            <Tabs.Root value={activeView} onValueChange={(e) => e?.value && setActiveView(e.value as unknown as JournalTabType)}>
+
+          <Flex
+            gap={3}
+            flexDirection={{ base: "column", sm: "row" }}
+            width={{ base: "100%", md: "auto" }}
+          >
+            <Tabs.Root
+              value={activeView}
+              onValueChange={(e) => e?.value && setActiveView(e.value as JournalTabType)}
+              size={isMobile ? "sm" : "md"}
+            >
               <Tabs.List>
                 <Tabs.Trigger value="table">Table View</Tabs.Trigger>
                 <Tabs.Trigger value="calendar">Calendar View</Tabs.Trigger>
               </Tabs.List>
             </Tabs.Root>
+
             <Button
-              variant={"surface"}
+              variant="surface"
               onClick={() => setIsFormOpen(true)}
-              alignItems={'center'}
+              alignItems="center"
               gap={2}
+              size={isMobile ? "sm" : "md"}
+              width={{ base: "100%", sm: "auto" }}
             >
               <Icon as={FiPlus} />
-              <Text>Add Trade</Text>
+              <Text>{isSmallScreen ? "Add" : "Add Trade"}</Text>
             </Button>
           </Flex>
         </Flex>
 
         {/* Statistics Cards */}
-        <SimpleGrid columns={12} gap={4}>
-          <GridItem colSpan={{ base: 12, md: 3 }}>
+        <SimpleGrid
+          columns={{ base: 1, sm: 2, md: 4 }}
+          gap={{ base: 3, md: 4 }}
+          w="full"
+        >
+          <GridItem>
             <StatCard
               label="Total Trades"
               value={totalTrades.toString()}
               formatValue={false}
             />
           </GridItem>
-          <GridItem colSpan={{ base: 12, md: 3 }}>
+          <GridItem>
             <StatCard
               label="Win Rate"
               value={`${winRate.toFixed(1)}%`}
               formatValue={false}
             />
           </GridItem>
-          <GridItem colSpan={{ base: 12, md: 3 }}>
+          <GridItem>
             <StatCard
               label="Total P&L"
               value={totalPnl}
               valueColor={totalPnl >= 0 ? "green.500" : "red.500"}
             />
           </GridItem>
-          <GridItem colSpan={{ base: 12, md: 3 }}>
+          <GridItem>
             <StatCard
               label="Win/Loss"
               value={`${winningTrades}/${losingTrades}`}
@@ -192,12 +242,19 @@ export default function TradeJournalPage() {
         </SimpleGrid>
 
         {/* Trade View (Table or Calendar) */}
-        {activeView === 'table' ? (
-          <TradeHistoryTable trades={trades} />
-        ) : (
-          <TradeCalendar trades={trades} />
-        )}
-      </Flex>
+        <Box
+          w="full"
+          overflowX="auto"
+          borderRadius="md"
+          boxShadow="sm"
+        >
+          {activeView === 'table' ? (
+            <TradeHistoryTable trades={trades} />
+          ) : (
+            <TradeCalendar trades={trades} />
+          )}
+        </Box>
+      </VStack>
 
       {/* Add Trade Form Dialog */}
       {isFormOpen && (
