@@ -1,12 +1,40 @@
 "use client";
 
-import { Container, SimpleGrid, Text, Flex, GridItem } from "@chakra-ui/react";
+import { useState } from "react";
+import {
+  Card,
+  Container,
+  SimpleGrid,
+  GridItem,
+  Flex,
+  Text,
+  Box,
+  VStack,
+  HStack,
+  Icon,
+  Button,
+  useBreakpointValue,
+  Skeleton
+} from "@chakra-ui/react";
+import { FiArrowUp, FiArrowDown, FiCalendar } from "react-icons/fi";
 import StatCard from "@/components/dashboard/StatCard";
+import { useColorModeValue } from "@/components/ui/color-mode";
 import PerformanceChartCard from "@/components/dashboard/PerformanceChartCard";
 import LatestTradesCard from "@/components/dashboard/LatestTradesCard";
 
 export default function DashboardPage() {
-  // Sample data for latest trades
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Responsive layout adjustments
+  const isMobile = useBreakpointValue({ base: true, md: false });
+
+  // Theme colors
+  const bgColor = useColorModeValue("gray.50", "gray.900");
+  const cardBgColor = useColorModeValue("white", "gray.800");
+  const textColor = useColorModeValue("gray.800", "gray.100");
+  const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
+
   const latestTrades = [
     { id: 1, symbol: "BTC/USDT", type: "buy", amount: 0.25, price: 42350.75, pnl: 125.50, date: "2023-06-15" },
     { id: 2, symbol: "ETH/USDT", type: "sell", amount: 1.5, price: 2250.25, pnl: -45.75, date: "2023-06-14" },
@@ -16,51 +44,114 @@ export default function DashboardPage() {
   ];
 
   return (
-    <Container my={8}>
-      <Flex flexDir={'column'} gap={4}>
-        <Flex flexDir={'column'}>
-          <Text fontWeight={500} fontSize={'2xl'}>Dashboard</Text>
-          <Text fontSize={'md'} color={'gray.500'}>Track and analyze your trading performance</Text>
+    <Container
+      maxW="container.xl"
+      py={{ base: 3, md: 6 }}
+      px={{ base: 2, sm: 4, md: 6 }}
+      minH="calc(100vh - 64px)"
+      bg={bgColor}
+    >
+      <VStack spaceY={{ base: 4, md: 6 }} align="stretch" w="full">
+        {/* Header */}
+        <Flex
+          justifyContent="space-between"
+          alignItems={{ base: "flex-start", md: "center" }}
+          flexDirection={{ base: "column", md: "row" }}
+          gap={{ base: 2, md: 0 }}
+        >
+          <Box>
+            <Text
+              fontWeight="600"
+              fontSize={{ base: "xl", md: "2xl" }}
+              color={textColor}
+            >
+              Dashboard
+            </Text>
+            <Text
+              fontSize={{ base: "sm", md: "md" }}
+              color={secondaryTextColor}
+            >
+              Overview of your trading performance
+            </Text>
+          </Box>
+
+          <HStack spaceX={3} mt={{ base: 2, md: 0 }}>
+            <Button
+              size={isMobile ? "sm" : "md"}
+              variant="surface"
+              alignItems="center"
+              gap={2}
+            >
+              <Icon as={FiCalendar} />
+              {isMobile ? "Today" : "Last 7 Days"}
+            </Button>
+            <Button
+              size={isMobile ? "sm" : "md"}
+              variant="surface"
+              colorPalette="blue"
+            >
+              Refresh
+            </Button>
+          </HStack>
         </Flex>
-        <SimpleGrid columns={12} gap={6}>
-          <GridItem colSpan={3}>
-            <StatCard
-              label="Total PNL"
-              value={123102}
-              change={4.3}
-              showChange={true}
-            />
+
+        {/* Stats Cards */}
+        <SimpleGrid columns={12} gap={{ base: 3, md: 4 }}>
+          <GridItem colSpan={{ base: 6, lg: 3 }}>
+            <Skeleton loading={isLoading}>
+              <StatCard
+                label="Total Balance"
+                value={24650.75}
+                change={12.5}
+                showChange
+              />
+            </Skeleton>
           </GridItem>
-          <GridItem colSpan={3}>
-            <StatCard
-              label="Win Rate"
-              value="192.1k"
-              change={-1.9}
-              showChange={true}
-              formatValue={false}
-            />
+          <GridItem colSpan={{ base: 6, lg: 3 }}>
+            <Skeleton loading={isLoading}>
+              <StatCard
+                label="Monthly Profit"
+                value={1245.23}
+                change={8.2}
+                showChange
+              />
+            </Skeleton>
           </GridItem>
-          <GridItem colSpan={3}>
-            <StatCard
-              label="Balance"
-              value={10123.2123}
-            />
+          <GridItem colSpan={{ base: 6, lg: 3 }}>
+            <Skeleton loading={isLoading}>
+              <StatCard
+                label="Win Rate"
+                value="68.5%"
+                change={3.1}
+                showChange
+                formatValue={false}
+              />
+            </Skeleton>
           </GridItem>
-          <GridItem colSpan={3}>
-            <StatCard
-              label="Open Positions"
-              value="4"
-              formatValue={false}
-            />
+          <GridItem colSpan={{ base: 6, lg: 3 }}>
+            <Skeleton loading={isLoading}>
+              <StatCard
+                label="Total Trades"
+                value="156"
+                change={-2.3}
+                showChange
+                formatValue={false}
+              />
+            </Skeleton>
           </GridItem>
-          <GridItem colSpan={9}>
+        </SimpleGrid>
+
+        {/* Charts */}
+        <SimpleGrid columns={12} gap={{ base: 3, md: 4 }}>
+          <GridItem colSpan={{ base: 12, lg: 9 }}>
             <PerformanceChartCard />
           </GridItem>
-          <GridItem colSpan={3}>
+
+          <GridItem colSpan={{ base: 12, lg: 3 }}>
             <LatestTradesCard trades={latestTrades} />
           </GridItem>
         </SimpleGrid>
-      </Flex>
+      </VStack>
     </Container>
   );
 }
