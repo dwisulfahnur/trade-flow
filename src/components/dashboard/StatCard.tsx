@@ -8,6 +8,7 @@ interface StatCardProps {
   change?: number;
   showChange?: boolean;
   formatValue?: boolean;
+  valueColor?: string;
 }
 
 export default function StatCard({
@@ -15,7 +16,8 @@ export default function StatCard({
   value,
   change,
   showChange = false,
-  formatValue = true
+  formatValue = true,
+  valueColor,
 }: StatCardProps) {
   const isPositive = typeof change === 'number' ? change >= 0 : false;
 
@@ -25,7 +27,7 @@ export default function StatCard({
         <Stat.Root>
           <Stat.Label>{label}</Stat.Label>
           <Flex justifyContent={'space-between'}>
-            <Stat.ValueText>
+            <Stat.ValueText color={valueColor ?? undefined} >
               {formatValue && typeof value === 'number' ? (
                 <FormatNumber value={value} maximumFractionDigits={2} />
               ) : (
@@ -43,4 +45,4 @@ export default function StatCard({
       </Card.Body>
     </Card.Root>
   );
-} 
+}
