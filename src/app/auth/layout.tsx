@@ -1,6 +1,5 @@
 "use client"
 
-import ColorModeSwitcherButton from "@/components/ColorModeSwitcherButton";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/common/Navbar";

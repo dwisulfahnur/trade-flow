@@ -1,7 +1,6 @@
 "use client"
 
 import { Box, Button, Flex, Link, Icon, Text, Container } from "@chakra-ui/react";
-import { useColorModeValue } from "../ui/color-mode";
 import { useUser } from "@clerk/nextjs";
 import NextLink from "next/link";
 import UserSettings from "../user/UserSettings";

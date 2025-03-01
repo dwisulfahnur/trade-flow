@@ -1,6 +1,5 @@
 "use client"
 
-import ColorModeSwitcherButton from "@/components/ColorModeSwitcherButton";
 import AuthenticatedNavbar from "@/components/common/AuthenticatedNavbar";
 import { Box } from "@chakra-ui/react";
 import { useAuth } from "@clerk/nextjs";

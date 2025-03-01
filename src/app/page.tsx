@@ -6,8 +6,8 @@ import { Icon } from "@chakra-ui/react";
 import { LuChartLine, LuLock, LuLayers, LuBookOpen } from "react-icons/lu";
 import { BsLightning } from "react-icons/bs";
 import { HiOutlineDocument } from "react-icons/hi";
+import { useColorModeValue } from "@/components/ui/color-mode";
 import Navbar from "@/components/common/Navbar";
-import { useColorMode, useColorModeValue } from "@/components/ui/color-mode";
 
 const FEATURES = [
   {
