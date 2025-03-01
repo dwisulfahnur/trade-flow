@@ -50,7 +50,7 @@ export default function SignInPage() {
     try {
       await signIn.authenticateWithRedirect({
         strategy: `oauth_${provider}`,
-        redirectUrl: '/auth/sign-in',
+        redirectUrl: '/auth/sign-in/sso-callback',
         redirectUrlComplete: '/dashboard'
       });
       // toaster.create({
