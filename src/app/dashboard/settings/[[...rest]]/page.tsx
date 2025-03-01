@@ -5,6 +5,7 @@ import { Flex, Icon, Text } from "@chakra-ui/react";
 import { FaBell, FaKey } from "react-icons/fa";
 import { useColorMode } from "@/components/ui/color-mode";
 import { dark } from "@clerk/themes";
+import ApiKeySettings from "@/components/settings/ApiKeySettings";
 
 export default function SettingsPage() {
   const { user, isLoaded } = useUser();
@@ -31,7 +32,7 @@ export default function SettingsPage() {
         }}
       >
         <UserProfile.Page label="API Keys" url={`api-keys`} labelIcon={<Icon as={FaKey} />}>
-          <Text>API Keys</Text>
+          <ApiKeySettings />
         </UserProfile.Page>
         <UserProfile.Page label="Notifications" url={`notifications`} labelIcon={<Icon as={FaBell} />}>
           <Text>Notifications</Text>
