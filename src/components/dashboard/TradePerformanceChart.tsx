@@ -16,7 +16,7 @@ const data = [
   { date: 'Apr 29', pnl: 72 },
 ];
 
-const getCumulativeData = (chartData: any[]) => {
+const getCumulativeData = (chartData: { date: string, pnl: number }[]) => {
   let cumulativePnl = 0;
   return chartData.map(item => {
     cumulativePnl += item.pnl;
@@ -44,7 +44,7 @@ export default function TradePerformanceChart() {
   const tooltipBgColor = useColorModeValue("#FFFFFF", "#1A202C");
   const tooltipBorderColor = useColorModeValue("rgba(0, 0, 0, 0.1)", "rgba(255, 255, 255, 0.1)");
 
-  const CustomTooltip = ({ active, payload, label }: any) => {
+  const CustomTooltip = ({ active, payload, label }: { active?: boolean, payload?: { value: number }[], label?: string }) => {
     if (active && payload && payload.length) {
       return (
         <div style={{

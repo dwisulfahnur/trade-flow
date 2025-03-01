@@ -21,7 +21,6 @@ export default function ApiKeyFormDialog({ open, onClose }: ApiKeyFormDialogProp
     register,
     handleSubmit,
     reset,
-    watch,
     control,
     formState: { errors }
   } = useForm<{
@@ -41,7 +40,11 @@ export default function ApiKeyFormDialog({ open, onClose }: ApiKeyFormDialogProp
     onClose()
   }
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: {
+    exchange: string
+    apiKey: string
+    secretKey: string
+  }) => {
     console.log(data)
     handleClose()
   }
