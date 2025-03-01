@@ -1,18 +1,19 @@
 import ColorModeSwitcherButton from "@/components/ColorModeSwitcherButton"
-import { Provider } from "@/components/ui/provider"
 import { ClerkProvider } from "@clerk/nextjs"
+import Providers from "./providers"
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   const { children } = props
   return (
-    <ClerkProvider>
-      <html suppressHydrationWarning>
-        <body>
-          <Provider>{children}
+    <html suppressHydrationWarning>
+      <body>
+        <ClerkProvider>
+          <Providers>
+            {children}
             <ColorModeSwitcherButton />
-          </Provider>
-        </body>
-      </html>
-    </ClerkProvider>
+          </Providers>
+        </ClerkProvider>
+      </body>
+    </html>
   )
 }
