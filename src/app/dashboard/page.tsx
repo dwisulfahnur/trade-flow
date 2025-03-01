@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import {
-  Card,
   Container,
   SimpleGrid,
   GridItem,
@@ -16,9 +15,9 @@ import {
   useBreakpointValue,
   Skeleton
 } from "@chakra-ui/react";
-import { FiArrowUp, FiArrowDown, FiCalendar } from "react-icons/fi";
-import StatCard from "@/components/dashboard/StatCard";
+import { FiCalendar } from "react-icons/fi";
 import { useColorModeValue } from "@/components/ui/color-mode";
+import StatCard from "@/components/dashboard/StatCard";
 import PerformanceChartCard from "@/components/dashboard/PerformanceChartCard";
 import LatestTradesCard from "@/components/dashboard/LatestTradesCard";
 
@@ -30,10 +29,8 @@ export default function DashboardPage() {
 
   // Theme colors
   const bgColor = useColorModeValue("gray.50", "gray.900");
-  const cardBgColor = useColorModeValue("white", "gray.800");
   const textColor = useColorModeValue("gray.800", "gray.100");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
-  const borderColor = useColorModeValue("gray.200", "gray.700");
 
   const latestTrades = [
     { id: 1, symbol: "BTC/USDT", type: "buy", amount: 0.25, price: 42350.75, pnl: 125.50, date: "2023-06-15" },
