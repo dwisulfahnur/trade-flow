@@ -34,9 +34,9 @@ export default function SettingsPage() {
         <UserProfile.Page label="API Keys" url={`api-keys`} labelIcon={<Icon as={FaKey} />}>
           <ApiKeySettings />
         </UserProfile.Page>
-        <UserProfile.Page label="Notifications" url={`notifications`} labelIcon={<Icon as={FaBell} />}>
+        {/* <UserProfile.Page label="Notifications" url={`notifications`} labelIcon={<Icon as={FaBell} />}>
           <Text>Notifications</Text>
-        </UserProfile.Page>
+        </UserProfile.Page> */}
       </UserProfile>
     </Flex>
   );

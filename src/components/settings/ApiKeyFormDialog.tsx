@@ -1,27 +1,33 @@
-import { Button, DialogBackdrop, Field, Input, Text, VStack, createListCollection } from "@chakra-ui/react";
-import { SelectRoot, SelectTrigger, SelectValueText, SelectContent, SelectItem } from "@/components/ui/select";
+"use client";
+
+import { Button, Input, VStack } from "@chakra-ui/react";
+import { useEffect } from "react";
+import { Field } from "@/components/ui/field";
 import { DialogRoot, DialogContent, DialogHeader, DialogTitle, DialogBody, DialogFooter, DialogActionTrigger } from "@/components/ui/dialog";
 import { Controller, useForm } from "react-hook-form";
+import { useSession } from "@clerk/nextjs";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Toaster, toaster } from "../ui/toaster";
+import { Database } from "@/types/database.types";
+import SelectExchangeField from "./SelectExchangeField";
+import ApiKeysService from "@/services/supabase/apiKeys";
 
 interface ApiKeyFormDialogProps {
-  open: boolean
-  onClose: () => void
+  open: boolean;
+  onClose: () => void;
+  initialData?: Database['public']['Tables']['api_keys']['Row'];
 }
 
-export default function ApiKeyFormDialog({ open, onClose }: ApiKeyFormDialogProps) {
-  const exchanges = createListCollection({
-    items: [
-      { label: 'Binance', value: 'binance' },
-      { label: 'Bybit', value: 'bybit' },
-      { label: 'OKX', value: 'okx' },
-    ]
-  })
+export default function ApiKeyFormDialog({ open, onClose, initialData }: ApiKeyFormDialogProps) {
+  const { session } = useSession();
+  const apiKeysService = new ApiKeysService(session);
 
   const {
     register,
     handleSubmit,
     reset,
     control,
+    setValue,
     formState: { errors }
   } = useForm<{
     exchange: string,
@@ -33,95 +39,124 @@ export default function ApiKeyFormDialog({ open, onClose }: ApiKeyFormDialogProp
       apiKey: '',
       secretKey: '',
     }
-  })
+  });
+
+  // Set form values when editing
+  useEffect(() => {
+    if (initialData) {
+      setValue('exchange', initialData.exchange);
+      setValue('apiKey', initialData.apiKey);
+      setValue('secretKey', initialData.secretKey);
+    }
+  }, [initialData, setValue]);
 
   const handleClose = () => {
-    reset()
-    onClose()
-  }
+    reset();
+    onClose();
+  };
+
+  const queryClient = useQueryClient();
+  const { mutate: createApiKey, isPending: isCreatingApiKey } = useMutation({
+    mutationFn: apiKeysService.createApiKey,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+      toaster.create({
+        title: 'API Key created',
+        description: 'API Key created successfully',
+        type: 'success',
+      });
+      handleClose();
+    },
+    onError: (error) => {
+      console.error(error);
+      toaster.create({
+        title: 'Error creating API Key',
+        description: 'Failed to create API Key',
+        type: 'error',
+      });
+    }
+  });
+
+  const { mutate: updateApiKey, isPending: isUpdatingApiKey } = useMutation({
+    mutationFn: apiKeysService.updateApiKey,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['apiKeys'] });
+      toaster.create({
+        title: 'API Key updated',
+        description: 'API Key updated successfully',
+        type: 'success',
+      });
+      handleClose();
+    },
+    onError: (error) => {
+      console.error(error);
+      toaster.create({
+        title: 'Error updating API Key',
+        description: 'Failed to update API Key',
+        type: 'error',
+      });
+    }
+  });
 
   const onSubmit = (data: {
-    exchange: string
-    apiKey: string
-    secretKey: string
+    exchange: string;
+    apiKey: string;
+    secretKey: string;
   }) => {
-    console.log(data)
-    handleClose()
-  }
+    if (initialData) {
+      updateApiKey({ id: initialData.id, ...data });
+    } else {
+      createApiKey(data);
+    }
+  };
 
   return (
-    <DialogRoot
-      motionPreset={'slide-in-top'}
-      placement={'top'}
-      open={open}
-      closeOnEscape={false}
-      scrollBehavior={'inside'}
-      onOpenChange={handleClose}
-      closeOnInteractOutside={false}
-    >
-      <DialogBackdrop />
-      <DialogContent as='form' onSubmit={handleSubmit(onSubmit)}>
-        <DialogHeader>
-          <DialogTitle>Add API Key</DialogTitle>
-        </DialogHeader>
-        <DialogBody>
-          <VStack spaceY={4}>
-            <Field.Root invalid={!!errors.exchange}>
-              <Field.Label>
-                <Text fontSize={'sm'} fontWeight={'medium'}>Exchange</Text>
-                <Field.RequiredIndicator />
-              </Field.Label>
-              <Controller
-                control={control}
-                name="exchange"
-                render={({ field }) => (
-                  <SelectRoot
-                    name={field.name}
-                    multiple={false}
-                    value={[field.value]}
-                    onValueChange={({ value }) => field.onChange(value)}
-                    onInteractOutside={() => field.onBlur()}
-                    collection={exchanges}
-                  >
-                    <SelectTrigger>
-                      <SelectValueText placeholder="Select Exchange" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {exchanges.items.map((exchange) => (
-                        <SelectItem item={exchange} key={exchange.value}>
-                          {exchange.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </SelectRoot>
-                )}
-              />
-            </Field.Root>
-            <Field.Root invalid={!!errors.apiKey}>
-              <Field.Label>
-                <Text fontSize={'sm'} fontWeight={'medium'}>API Key</Text>
-                <Field.RequiredIndicator />
-              </Field.Label>
-              <Input {...register('apiKey', { required: 'API Key is required' })} />
-              {errors.apiKey && <Field.ErrorText>{errors.apiKey.message}</Field.ErrorText>}
-            </Field.Root>
-            <Field.Root invalid={!!errors.secretKey}>
-              <Field.Label>
-                <Text fontSize={'sm'} fontWeight={'medium'}>Secret Key</Text>
-                <Field.RequiredIndicator />
-              </Field.Label>
-              <Input {...register('secretKey', { required: 'Secret Key is required' })} />
-              {errors.secretKey && <Field.ErrorText>{errors.secretKey.message}</Field.ErrorText>}
-            </Field.Root>
-          </VStack>
-        </DialogBody>
-        <DialogFooter>
-          <DialogActionTrigger asChild>
-            <Button colorPalette={"red"} variant={'surface'} size={'xs'}>Cancel</Button>
-          </DialogActionTrigger>
-          <Button type="submit" colorPalette={"blue"} variant={'surface'} size={'xs'}>Save</Button>
-        </DialogFooter>
-      </DialogContent>
-    </DialogRoot>
-  )
+    <>
+      <DialogRoot open={open} onOpenChange={handleClose}>
+        <DialogContent>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <DialogHeader>
+              <DialogTitle>{initialData ? 'Edit API Key' : 'Add API Key'}</DialogTitle>
+            </DialogHeader>
+            <DialogBody>
+              <VStack spaceY={4} align="stretch">
+                <Field
+                  label="Exchange"
+                  invalid={!!errors.exchange}
+                  errorText={errors.exchange?.message?.toString()}
+                >
+                  <Controller
+                    name="exchange"
+                    control={control}
+                    rules={{ required: 'Exchange is required' }}
+                    render={({ field }) => (
+                      <SelectExchangeField
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                  />
+                </Field>
+                <Field invalid={!!errors.apiKey} label="API Key" errorText={errors.apiKey?.message?.toString()}>
+                  <Input {...register('apiKey', { required: 'API Key is required' })} />
+                </Field>
+                <Field invalid={!!errors.secretKey} label="Secret Key" errorText={errors.secretKey?.message?.toString()}>
+                  <Input {...register('secretKey', { required: 'Secret Key is required' })} />
+                </Field>
+              </VStack>
+            </DialogBody>
+            <DialogFooter>
+              <DialogActionTrigger asChild>
+                <Button colorPalette={"white"} variant={'solid'} size={'xs'}>Cancel</Button>
+              </DialogActionTrigger>
+              <Button type="submit" colorPalette={"blue"} variant={'solid'} size={'xs'} loading={isCreatingApiKey || isUpdatingApiKey}>
+                {initialData ? 'Update' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </DialogRoot>
+      <Toaster />
+    </>
+  );
 } 
