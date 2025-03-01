@@ -8,6 +8,7 @@ import { BsLightning } from "react-icons/bs";
 import { HiOutlineDocument } from "react-icons/hi";
 import { useColorModeValue } from "@/components/ui/color-mode";
 import Navbar from "@/components/common/Navbar";
+import NextLink from "next/link";
 
 const FEATURES = [
   {
@@ -53,9 +54,11 @@ export default function IndexPage() {
               <Text fontSize={'6xl'} fontWeight={500} textAlign={'center'}>Track Your Trades Smarter</Text>
               <Text fontSize={'2xl'} fontWeight={400} color={'gray.500'} maxW={'600px'} textAlign={'center'}>TradeFlow is a tool that helps you track your trades and optimize your profits.</Text>
               <Flex justifyContent={'center'} gap={4} mt={4}>
-                <Button alignItems={'center'} gap={2} px={8}>
-                  Get Started for Free
-                  <Icon as={FiArrowRight} />
+                <Button alignItems={'center'} gap={2} px={8} asChild>
+                  <NextLink href={'/auth/sign-in'}>
+                    Get Started for Free
+                    <Icon as={FiArrowRight} />
+                  </NextLink>
                 </Button>
                 <Button variant={'outline'} alignItems={'center'} gap={2} px={8}>
                   Learn More
@@ -90,10 +93,12 @@ export default function IndexPage() {
             <VStack gap={4} alignItems={'center'}>
               <Heading fontSize={'4xl'} fontWeight={500} textAlign={'center'} color={useColorModeValue('gray.200', 'gray.500')}>Ready to Improve Your Trading?</Heading>
               <Text fontSize={'xl'} fontWeight={400} color={useColorModeValue('gray.200', 'gray.500')} textAlign={'center'}>Join the thousands of traders who have already improved their trading performance with TradeFlow.</Text>
-              <Button variant={'outline'} bg={useColorModeValue('gray.200', 'gray.900')} alignItems={'center'} gap={2} px={8}>
-                Get Started Now
-                <Icon as={FiArrowRight} />
-              </Button>
+              <NextLink href={'/auth/sign-in'}>
+                <Button variant={'outline'} bg={useColorModeValue('gray.200', 'gray.900')} alignItems={'center'} gap={2} px={8}>
+                  Get Started Now
+                  <Icon as={FiArrowRight} />
+                </Button>
+              </NextLink>
             </VStack>
           </Container>
         </Center>
