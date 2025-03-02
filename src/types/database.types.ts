@@ -39,6 +39,117 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_sync_history: {
+        Row: {
+          api_key_id: string
+          created_at: string
+          error_message: string | null
+          exchange: string
+          id: string
+          status: string
+          sync_end_time: string | null
+          sync_start_time: string
+          trades_synced: number | null
+          user_id: string
+        }
+        Insert: {
+          api_key_id: string
+          created_at?: string
+          error_message?: string | null
+          exchange: string
+          id?: string
+          status?: string
+          sync_end_time?: string | null
+          sync_start_time?: string
+          trades_synced?: number | null
+          user_id?: string
+        }
+        Update: {
+          api_key_id?: string
+          created_at?: string
+          error_message?: string | null
+          exchange?: string
+          id?: string
+          status?: string
+          sync_end_time?: string | null
+          sync_start_time?: string
+          trades_synced?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_api_key"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_sync_history_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_trades: {
+        Row: {
+          amount: number | null
+          created_at: string
+          date: string
+          entry_price: number | null
+          exchange_id: string | null
+          exchange_order_id: string | null
+          exit_price: number | null
+          fee: number | null
+          id: string
+          is_synchronized: boolean | null
+          last_synced_at: string | null
+          notes: string | null
+          pnl: number
+          symbol: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          date: string
+          entry_price?: number | null
+          exchange_id?: string | null
+          exchange_order_id?: string | null
+          exit_price?: number | null
+          fee?: number | null
+          id?: string
+          is_synchronized?: boolean | null
+          last_synced_at?: string | null
+          notes?: string | null
+          pnl: number
+          symbol: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          date?: string
+          entry_price?: number | null
+          exchange_id?: string | null
+          exchange_order_id?: string | null
+          exit_price?: number | null
+          fee?: number | null
+          id?: string
+          is_synchronized?: boolean | null
+          last_synced_at?: string | null
+          notes?: string | null
+          pnl?: number
+          symbol?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -50,7 +161,7 @@ export type Database = {
       }
     }
     Enums: {
-      [_ in never]: never
+      trades_type: "sell" | "buy"
     }
     CompositeTypes: {
       [_ in never]: never
