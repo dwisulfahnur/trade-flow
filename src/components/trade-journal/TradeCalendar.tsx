@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   Flex,
@@ -17,15 +17,26 @@ import {
 import { Tooltip } from "@/components/ui/tooltip";
 import { FiChevronLeft, FiChevronRight, FiInfo } from "react-icons/fi";
 import { useColorModeValue } from "@/components/ui/color-mode";
-import { Trade } from "@/services/supabase/userTrades";
-
+import UserTradesService, { Trade } from "@/services/supabase/userTrades";
+import { useQuery } from "@tanstack/react-query";
+import { useSession } from "@clerk/nextjs";
 interface TradeCalendarProps {
-  trades: Trade[];
   onEditTrade: (trade: Trade) => void;
 }
 
-export default function TradeCalendar({ trades, onEditTrade }: TradeCalendarProps) {
+export default function TradeCalendar({ onEditTrade }: TradeCalendarProps) {
+  const [startDate, setStartDate] = useState<string>();
+  const [endDate, setEndDate] = useState<string>();
+
   const [currentDate, setCurrentDate] = useState(new Date());
+  const { session } = useSession();
+
+  const tradesService = new UserTradesService(session);
+  const { data: trades, isLoading } = useQuery({
+    queryKey: ['trades'],
+    queryFn: () => tradesService.getTrades({ startDate, endDate }),
+    enabled: !!session,
+  });
 
   // Define all theme colors using useColorModeValue at the top
   const colors = {
@@ -80,6 +91,11 @@ export default function TradeCalendar({ trades, onEditTrade }: TradeCalendarProp
     setCurrentDate(new Date(currentYear, currentMonth + 1, 1));
   };
 
+  useEffect(() => {
+    setStartDate(new Date(currentYear, currentMonth, 1).toISOString());
+    setEndDate(new Date(currentYear, currentMonth + 1, 0).toISOString());
+  }, [currentDate]);
+
   // Check if a date is today
   const isToday = (day: number) => {
     const today = new Date();
@@ -91,7 +107,7 @@ export default function TradeCalendar({ trades, onEditTrade }: TradeCalendarProp
   // Get trades for a specific day
   const getDayStats = (day: number) => {
     const dateString = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-    const dayTrades = trades.filter(trade => trade.date.startsWith(dateString));
+    const dayTrades = trades?.filter(trade => trade.date.startsWith(dateString)) ?? [];
 
     const pnl = dayTrades.reduce((sum, trade) => sum + trade.pnl, 0);
     const tradesCount = dayTrades.length;

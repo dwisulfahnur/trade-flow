@@ -20,10 +20,12 @@ import { useColorModeValue } from "@/components/ui/color-mode";
 import StatCard from "@/components/dashboard/StatCard";
 import PerformanceChartCard from "@/components/dashboard/PerformanceChartCard";
 import LatestTradesCard from "@/components/dashboard/LatestTradesCard";
+import { useSession } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
+import UserTradesService from "@/services/supabase/userTrades";
+
 
 export default function DashboardPage() {
-  const [isLoading, setIsLoading] = useState(false);
-
   // Responsive layout adjustments
   const isMobile = useBreakpointValue({ base: true, md: false });
 
@@ -32,13 +34,38 @@ export default function DashboardPage() {
   const textColor = useColorModeValue("gray.800", "gray.100");
   const secondaryTextColor = useColorModeValue("gray.600", "gray.400");
 
-  const latestTrades = [
-    { id: 1, symbol: "BTC/USDT", type: "buy", amount: 0.25, price: 42350.75, pnl: 125.50, date: "2023-06-15" },
-    { id: 2, symbol: "ETH/USDT", type: "sell", amount: 1.5, price: 2250.25, pnl: -45.75, date: "2023-06-14" },
-    { id: 3, symbol: "SOL/USDT", type: "buy", amount: 10, price: 105.80, pnl: 78.20, date: "2023-06-13" },
-    { id: 4, symbol: "ADA/USDT", type: "sell", amount: 500, price: 0.45, pnl: 32.40, date: "2023-06-12" },
-    { id: 5, symbol: "DOT/USDT", type: "buy", amount: 25, price: 6.75, pnl: -18.30, date: "2023-06-11" },
-  ];
+  const { session } = useSession();
+  const tradesService = new UserTradesService(session);
+
+  const { data: pnlRes, isLoading: pnlLoading } = useQuery({
+    queryKey: ['trades-pnl'],
+    queryFn: () => tradesService.getTradesPnl({}),
+    enabled: !!session,
+  });
+
+  const { data: tradesNumberRes, isLoading: tradesNumberLoading } = useQuery({
+    queryKey: ['trades-count'],
+    queryFn: () => tradesService.getTradesCount({}),
+    enabled: !!session,
+  });
+
+  const { data: winningTradesRes, isLoading: winningTradesLoading } = useQuery({
+    queryKey: ['trades-winning-count'],
+    queryFn: () => tradesService.getTradesWinningCount({}),
+    enabled: !!session,
+  });
+
+  const { data: losingTradesRes, isLoading: losingTradesLoading } = useQuery({
+    queryKey: ['trades-losing-count'],
+    queryFn: () => tradesService.getTradesLosingCount({}),
+    enabled: !!session,
+  });
+
+  const totalPnl = pnlRes ?? 0;
+  const totalTrades = tradesNumberRes ?? 0;
+  const winningTrades = winningTradesRes ?? 0;
+  const losingTrades = losingTradesRes ?? 0;
+  const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
 
   return (
     <Container
@@ -52,81 +79,70 @@ export default function DashboardPage() {
         {/* Header */}
         <Flex
           justifyContent="space-between"
-          alignItems={{ base: "flex-start", md: "center" }}
-          flexDirection={{ base: "column", md: "row" }}
-          gap={{ base: 2, md: 0 }}
+          alignItems="center"
+          flexWrap="wrap"
+          gap={2}
         >
           <Box>
-            <Text
-              fontWeight="600"
-              fontSize={{ base: "xl", md: "2xl" }}
-              color={textColor}
-            >
+            <Text fontSize="2xl" fontWeight="bold" color={textColor}>
               Dashboard
             </Text>
-            <Text
-              fontSize={{ base: "sm", md: "md" }}
-              color={secondaryTextColor}
-            >
+            <Text fontSize="sm" color={secondaryTextColor}>
               Overview of your trading performance
             </Text>
           </Box>
-
-          <HStack spaceX={3} mt={{ base: 2, md: 0 }}>
+          <HStack>
             <Button
               size={isMobile ? "sm" : "md"}
-              variant="surface"
+              variant="outline"
               alignItems="center"
               gap={2}
             >
               <Icon as={FiCalendar} />
-              {isMobile ? "Today" : "Last 7 Days"}
-            </Button>
-            <Button
-              size={isMobile ? "sm" : "md"}
-              variant="surface"
-              colorPalette="blue"
-            >
-              Refresh
+              Last 30 Days
             </Button>
           </HStack>
         </Flex>
 
         {/* Stats Cards */}
-        <SimpleGrid columns={12} gap={{ base: 3, md: 4 }}>
-          <GridItem colSpan={{ base: 6, lg: 3 }}>
-            <Skeleton loading={isLoading}>
-              <StatCard
-                label="Total Balance"
-                value={24650.75}
-              />
-            </Skeleton>
+        {/* Statistics Cards */}
+        <SimpleGrid
+          columns={{ base: 1, sm: 2, md: 4 }}
+          gap={{ base: 3, md: 4 }}
+          w="full"
+        >
+          <GridItem>
+            <StatCard
+              label="Total Trades"
+              value={totalTrades}
+              formatValue={true}
+              isLoading={tradesNumberLoading}
+            />
           </GridItem>
-          <GridItem colSpan={{ base: 6, lg: 3 }}>
-            <Skeleton loading={isLoading}>
-              <StatCard
-                label="Monthly Profit"
-                value={1245.23}
-              />
-            </Skeleton>
+          <GridItem>
+            <StatCard
+              label="Win Rate"
+              value={winningTradesLoading || losingTradesLoading ? "-" : `${winRate.toFixed(1)}%`}
+              formatValue={false}
+              isLoading={tradesNumberLoading}
+            />
           </GridItem>
-          <GridItem colSpan={{ base: 6, lg: 3 }}>
-            <Skeleton loading={isLoading}>
-              <StatCard
-                label="Win Rate"
-                value="68.5%"
-                formatValue={false}
-              />
-            </Skeleton>
+          <GridItem>
+            <StatCard
+              label="Total P&L"
+              value={totalPnl}
+              valueColor={totalPnl >= 0 ? "green.500" : "red.500"}
+              formatValue={true}
+              isLoading={pnlLoading}
+            />
           </GridItem>
-          <GridItem colSpan={{ base: 6, lg: 3 }}>
-            <Skeleton loading={isLoading}>
-              <StatCard
-                label="Total Trades"
-                value="156"
-                formatValue={false}
-              />
-            </Skeleton>
+          <GridItem>
+            <StatCard
+              label="Win/Loss"
+              value={winningTradesLoading || losingTradesLoading ? "-" : `${winningTrades}/${losingTrades}`}
+              formatValue={false}
+              isLoading={winningTradesLoading || losingTradesLoading}
+            />
           </GridItem>
         </SimpleGrid>
 
@@ -137,7 +153,7 @@ export default function DashboardPage() {
           </GridItem>
 
           <GridItem colSpan={{ base: 12, lg: 3 }}>
-            <LatestTradesCard trades={latestTrades} />
+            <LatestTradesCard />
           </GridItem>
         </SimpleGrid>
       </VStack>

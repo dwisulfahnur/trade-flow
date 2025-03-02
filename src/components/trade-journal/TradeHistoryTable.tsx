@@ -26,7 +26,7 @@ interface TradeHistoryTableProps {
   onEditTrade: (trade: Trade) => void;
 }
 
-export default function TradeHistoryTable({ trades: propTrades, isLoading: propIsLoading, onEditTrade }: TradeHistoryTableProps) {
+export default function TradeHistoryTable({ onEditTrade }: TradeHistoryTableProps) {
   const isMobile = useBreakpointValue({ base: true, md: false });
   const { session } = useSession();
   const tradesService = new UserTradesService(session);
@@ -49,16 +49,16 @@ export default function TradeHistoryTable({ trades: propTrades, isLoading: propI
   const [tradeToDelete, setTradeToDelete] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
+
   // Fetch trades if not provided as props
   const { data: fetchedTrades, isLoading: isLoadingTrades } = useQuery({
     queryKey: ['trades'],
-    queryFn: tradesService.getTrades,
-    enabled: !propTrades, // Only fetch if trades are not provided as props
+    queryFn: () => tradesService.getTrades({ limit: itemsPerPage, offset: (currentPage - 1) * itemsPerPage }),
   });
 
   // Use props or fetched data
-  const allTrades = propTrades || fetchedTrades || [];
-  const isLoading = propIsLoading || isLoadingTrades;
+  const allTrades = fetchedTrades || [];
+  const isLoading = isLoadingTrades;
 
   // Define theme colors
   const colors = {

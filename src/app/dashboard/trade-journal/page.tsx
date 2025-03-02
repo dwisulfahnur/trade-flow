@@ -46,13 +46,6 @@ export default function TradeJournalPage() {
   const textColor = useColorModeValue("gray.800", "gray.100");
   const secondaryTextColor = useColorModeValue("gray.500", "gray.400");
 
-  // Fetch trades from the database
-  const { data: trades, isLoading } = useQuery({
-    queryKey: ['trades'],
-    queryFn: tradesService.getTrades,
-    enabled: !!session, // Only fetch if user is logged in
-  });
-
   const handleAddTrade = (data: any) => {
     console.log("Adding trade:", data);
     setIsFormOpen(false);
@@ -67,13 +60,35 @@ export default function TradeJournalPage() {
     setIsSyncDialogOpen(true);
   };
 
-  // Calculate statistics
-  const tradeData = trades || [];
-  const totalTrades = tradeData.length;
-  const winningTrades = tradeData.filter(trade => trade.pnl > 0).length;
-  const losingTrades = tradeData.filter(trade => trade.pnl < 0).length;
+  const { data: pnlRes, isLoading: pnlLoading } = useQuery({
+    queryKey: ['trades-pnl'],
+    queryFn: () => tradesService.getTradesPnl({}),
+    enabled: !!session,
+  });
+
+  const { data: tradesNumberRes, isLoading: tradesNumberLoading } = useQuery({
+    queryKey: ['trades-count'],
+    queryFn: () => tradesService.getTradesCount({}),
+    enabled: !!session,
+  });
+
+  const { data: winningTradesRes, isLoading: winningTradesLoading } = useQuery({
+    queryKey: ['trades-winning-count'],
+    queryFn: () => tradesService.getTradesWinningCount({}),
+    enabled: !!session,
+  });
+
+  const { data: losingTradesRes, isLoading: losingTradesLoading } = useQuery({
+    queryKey: ['trades-losing-count'],
+    queryFn: () => tradesService.getTradesLosingCount({}),
+    enabled: !!session,
+  });
+
+  const totalPnl = pnlRes ?? 0;
+  const totalTrades = tradesNumberRes ?? 0;
+  const winningTrades = winningTradesRes ?? 0;
+  const losingTrades = losingTradesRes ?? 0;
   const winRate = totalTrades > 0 ? (winningTrades / totalTrades) * 100 : 0;
-  const totalPnl = tradeData.reduce((sum, trade) => sum + trade.pnl, 0);
 
   return (
     <Container
@@ -160,33 +175,34 @@ export default function TradeJournalPage() {
           <GridItem>
             <StatCard
               label="Total Trades"
-              value={isLoading ? "-" : totalTrades.toString()}
-              formatValue={false}
-              isLoading={isLoading}
+              value={totalTrades}
+              formatValue={true}
+              isLoading={tradesNumberLoading}
             />
           </GridItem>
           <GridItem>
             <StatCard
               label="Win Rate"
-              value={isLoading ? "-" : `${winRate.toFixed(1)}%`}
+              value={winningTradesLoading || losingTradesLoading ? "-" : `${winRate.toFixed(1)}%`}
               formatValue={false}
-              isLoading={isLoading}
+              isLoading={tradesNumberLoading}
             />
           </GridItem>
           <GridItem>
             <StatCard
               label="Total P&L"
-              value={isLoading ? 0 : totalPnl}
+              value={totalPnl}
               valueColor={totalPnl >= 0 ? "green.500" : "red.500"}
-              isLoading={isLoading}
+              formatValue={true}
+              isLoading={pnlLoading}
             />
           </GridItem>
           <GridItem>
             <StatCard
               label="Win/Loss"
-              value={isLoading ? "-" : `${winningTrades}/${losingTrades}`}
+              value={winningTradesLoading || losingTradesLoading ? "-" : `${winningTrades}/${losingTrades}`}
               formatValue={false}
-              isLoading={isLoading}
+              isLoading={winningTradesLoading || losingTradesLoading}
             />
           </GridItem>
         </SimpleGrid>
@@ -199,16 +215,9 @@ export default function TradeJournalPage() {
           boxShadow="sm"
         >
           {activeView === 'table' ? (
-            <TradeHistoryTable
-              trades={trades}
-              isLoading={isLoading}
-              onEditTrade={handleEditTrade}
-            />
+            <TradeHistoryTable onEditTrade={handleEditTrade} />
           ) : (
-            <TradeCalendar
-              trades={trades || []}
-              onEditTrade={handleEditTrade}
-            />
+            <TradeCalendar onEditTrade={handleEditTrade} />
           )}
         </Box>
       </VStack>
