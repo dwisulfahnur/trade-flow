@@ -1,48 +1,69 @@
 "use client";
 
-import { Card, Flex, Stat, Badge, FormatNumber } from "@chakra-ui/react";
+import { Card, Text, Flex, Box, Skeleton } from "@chakra-ui/react";
+import { FormatNumber } from "@chakra-ui/react";
+import { useColorModeValue } from "@/components/ui/color-mode";
 
-interface StatCardProps {
+export interface StatCardProps {
   label: string;
   value: number | string;
-  change?: number;
-  showChange?: boolean;
-  formatValue?: boolean;
   valueColor?: string;
+  formatValue?: boolean;
+  isLoading?: boolean;
 }
 
 export default function StatCard({
   label,
   value,
-  change,
-  showChange = false,
-  formatValue = true,
   valueColor,
+  formatValue = true,
+  isLoading
 }: StatCardProps) {
-  const isPositive = typeof change === 'number' ? change >= 0 : false;
+  // Theme colors
+  const cardBg = useColorModeValue("white", "gray.800");
+  const labelColor = useColorModeValue("gray.500", "gray.400");
+  const defaultValueColor = useColorModeValue("gray.800", "white");
+  const skeletonStartColor = useColorModeValue("gray.100", "gray.700");
+  const skeletonEndColor = useColorModeValue("gray.300", "gray.600");
 
   return (
-    <Card.Root _hover={{ boxShadow: 'md' }}>
-      <Card.Body>
-        <Stat.Root>
-          <Stat.Label>{label}</Stat.Label>
-          <Flex justifyContent={'space-between'}>
-            <Stat.ValueText color={valueColor ?? undefined} >
-              {formatValue && typeof value === 'number' ? (
-                <FormatNumber value={value} maximumFractionDigits={2} />
-              ) : (
-                value
-              )}
-            </Stat.ValueText>
-            {showChange && change !== undefined && (
-              <Badge colorPalette={isPositive ? "green" : "red"} variant="plain" px="0">
-                {isPositive ? <Stat.UpIndicator /> : <Stat.DownIndicator />}
-                {Math.abs(change)}%
-              </Badge>
+    <Card.Root bg={cardBg} p={4} h="100%">
+      <Flex direction="column" h="100%">
+        <Text fontSize="sm" color={labelColor} mb={1}>
+          {label}
+        </Text>
+
+        {isLoading ? (
+          <Skeleton
+            height="28px"
+            width="80%"
+            css={{
+              "--start-color": skeletonStartColor,
+              "--end-color": skeletonEndColor,
+            }}
+          />
+        ) : (
+          <Box>
+            {formatValue && typeof value === 'number' ? (
+              <Text
+                fontSize="xl"
+                fontWeight="bold"
+                color={valueColor || defaultValueColor}
+              >
+                <FormatNumber value={value} />
+              </Text>
+            ) : (
+              <Text
+                fontSize="xl"
+                fontWeight="bold"
+                color={valueColor || defaultValueColor}
+              >
+                {value}
+              </Text>
             )}
-          </Flex>
-        </Stat.Root>
-      </Card.Body>
+          </Box>
+        )}
+      </Flex>
     </Card.Root>
   );
 }
