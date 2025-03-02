@@ -99,8 +99,6 @@ export default function DashboardPage() {
               <StatCard
                 label="Total Balance"
                 value={24650.75}
-                change={12.5}
-                showChange
               />
             </Skeleton>
           </GridItem>
@@ -109,8 +107,6 @@ export default function DashboardPage() {
               <StatCard
                 label="Monthly Profit"
                 value={1245.23}
-                change={8.2}
-                showChange
               />
             </Skeleton>
           </GridItem>
@@ -119,8 +115,6 @@ export default function DashboardPage() {
               <StatCard
                 label="Win Rate"
                 value="68.5%"
-                change={3.1}
-                showChange
                 formatValue={false}
               />
             </Skeleton>
@@ -130,8 +124,6 @@ export default function DashboardPage() {
               <StatCard
                 label="Total Trades"
                 value="156"
-                change={-2.3}
-                showChange
                 formatValue={false}
               />
             </Skeleton>
