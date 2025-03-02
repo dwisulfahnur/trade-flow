@@ -21,6 +21,12 @@ class ApiKeysService {
     return data
   }
 
+  async getApiKeyById(id: string): Promise<Database['public']['Tables']['api_keys']['Row']> {
+    const { data, error } = await this.supabaseClient.from('api_keys').select('*').eq('id', id).single();
+    if (error) throw error;
+    return data;
+  }
+
   async createApiKey({ apiKey, secretKey, exchange }: {
     apiKey: string,
     secretKey: string,
