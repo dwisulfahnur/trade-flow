@@ -4,25 +4,38 @@ import { Database } from "@/types/database.types";
 import createClerkSupabaseClient from "@/lib/supabase";
 
 class ApiKeysService {
-  private supabaseClient: SupabaseClient;
+  private supabaseClient: SupabaseClient | null;
 
   constructor(private session: UseSessionReturn['session']) {
-    this.supabaseClient = createClerkSupabaseClient(session);
-
+    this.session = session;
+    this.supabaseClient = null;
     this.getApiKeys = this.getApiKeys.bind(this);
     this.createApiKey = this.createApiKey.bind(this);
     this.updateApiKey = this.updateApiKey.bind(this);
     this.deleteApiKey = this.deleteApiKey.bind(this);
   }
 
+  async getSupabaseClient(): Promise<SupabaseClient> {
+    if (!this.supabaseClient) {
+      const token = await this.session?.getToken({ template: 'supabase' });
+      if (!token) {
+        throw new Error('Failed to get authorize user');
+      }
+      this.supabaseClient = createClerkSupabaseClient(token);
+    }
+    return this.supabaseClient;
+  }
+
   async getApiKeys(): Promise<Database['public']['Tables']['api_keys']['Row'][]> {
-    const { data, error } = await this.supabaseClient.from('api_keys').select('*');
+    const supabaseClient = await this.getSupabaseClient();
+    const { data, error } = await supabaseClient.from('api_keys').select('*');
     if (error) throw error;
     return data
   }
 
   async getApiKeyById(id: string): Promise<Database['public']['Tables']['api_keys']['Row']> {
-    const { data, error } = await this.supabaseClient.from('api_keys').select('*').eq('id', id).single();
+    const supabaseClient = await this.getSupabaseClient();
+    const { data, error } = await supabaseClient.from('api_keys').select('*').eq('id', id).single();
     if (error) throw error;
     return data;
   }
@@ -32,7 +45,8 @@ class ApiKeysService {
     secretKey: string,
     exchange: string
   }): Promise<Database['public']['Tables']['api_keys']['Row']> {
-    const { data, error } = await this.supabaseClient.from('api_keys').insert({
+    const supabaseClient = await this.getSupabaseClient();
+    const { data, error } = await supabaseClient.from('api_keys').insert({
       exchange,
       api_key: apiKey,
       api_secret: secretKey,
@@ -48,7 +62,8 @@ class ApiKeysService {
     secretKey: string,
     exchange: string
   }): Promise<Database['public']['Tables']['api_keys']['Row']> {
-    const { data, error } = await this.supabaseClient.from('api_keys')
+    const supabaseClient = await this.getSupabaseClient();
+    const { data, error } = await supabaseClient.from('api_keys')
       .update({
         api_key: apiKey,
         api_secret: secretKey,
@@ -63,7 +78,8 @@ class ApiKeysService {
   }
 
   async deleteApiKey(id: string) {
-    const { data, error } = await this.supabaseClient.from('api_keys')
+    const supabaseClient = await this.getSupabaseClient();
+    const { data, error } = await supabaseClient.from('api_keys')
       .delete()
       .eq('id', id)
       .select()

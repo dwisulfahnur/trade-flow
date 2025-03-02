@@ -21,12 +21,13 @@ export interface SyncResult {
 }
 
 class TradeSyncService {
-  private supabaseClient: SupabaseClient;
+  private supabaseClient: SupabaseClient | null;
   private apiKeysService: ApiKeysService;
   private userTradesService: UserTradesService;
 
   constructor(private session: UseSessionReturn['session']) {
-    this.supabaseClient = createClerkSupabaseClient(session);
+    this.session = session;
+    this.supabaseClient = null;
     this.apiKeysService = new ApiKeysService(session);
     this.userTradesService = new UserTradesService(session);
 
@@ -36,10 +37,23 @@ class TradeSyncService {
     this.getLatestSyncStatus = this.getLatestSyncStatus.bind(this);
   }
 
+
+  async getSupabaseClient(): Promise<SupabaseClient> {
+    if (!this.supabaseClient) {
+      const token = await this.session?.getToken({ template: 'supabase' });
+      if (!token) {
+        throw new Error('Failed to get authorize user');
+      }
+      this.supabaseClient = createClerkSupabaseClient(token);
+    }
+    return this.supabaseClient;
+  }
+
   async syncTradesFromExchange(options: SyncOptions): Promise<SyncResult> {
+    const supabaseClient = await this.getSupabaseClient();
     try {
       // 1. Create a sync history record
-      const { data: syncRecord, error: syncRecordError } = await this.supabaseClient
+      const { data: syncRecord, error: syncRecordError } = await supabaseClient
         .from('trade_sync_history')
         .insert({
           api_key_id: options.apiKeyId,
@@ -56,7 +70,7 @@ class TradeSyncService {
         const apiKey = await this.apiKeysService.getApiKeyById(options.apiKeyId);
 
         // 3. Update the exchange in sync record
-        await this.supabaseClient
+        await supabaseClient
           .from('trade_sync_history')
           .update({ exchange: apiKey.exchange })
           .eq('id', syncRecord.id);
@@ -78,8 +92,9 @@ class TradeSyncService {
         // 6. Process and save trades
         let importedCount = 0;
         for (const trade of trades) {
+          const supabaseClient = await this.getSupabaseClient();
           // Check if trade already exists by exchange_order_id
-          const { data: existingTrades } = await this.supabaseClient
+          const { data: existingTrades } = await supabaseClient
             .from('user_trades')
             .select('id')
             .eq('exchange_order_id', trade.orderId)
@@ -106,7 +121,7 @@ class TradeSyncService {
         }
 
         // 7. Update sync record as completed
-        await this.supabaseClient
+        await supabaseClient
           .from('trade_sync_history')
           .update({
             status: 'completed',
@@ -123,7 +138,7 @@ class TradeSyncService {
       } catch (error) {
         // Handle error and update sync record
         console.error('Sync error:', error);
-        await this.supabaseClient
+        await supabaseClient
           .from('trade_sync_history')
           .update({
             status: 'failed',
@@ -146,7 +161,8 @@ class TradeSyncService {
   }
 
   async getSyncHistory(limit = 10): Promise<any[]> {
-    const { data, error } = await this.supabaseClient
+    const supabaseClient = await this.getSupabaseClient();
+    const { data, error } = await supabaseClient
       .from('trade_sync_history')
       .select(`
         id,
@@ -170,7 +186,8 @@ class TradeSyncService {
   }
 
   async getLatestSyncStatus(): Promise<any | null> {
-    const { data, error } = await this.supabaseClient
+    const supabaseClient = await this.getSupabaseClient();
+    const { data, error } = await supabaseClient
       .from('trade_sync_history')
       .select(`
         id,

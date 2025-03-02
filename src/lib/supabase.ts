@@ -1,22 +1,24 @@
 
-import { createClient } from '@supabase/supabase-js'
+import { createClient, SupabaseClient } from '@supabase/supabase-js'
 import { UseSessionReturn } from '@clerk/types'
 
-function createClerkSupabaseClient(session: UseSessionReturn['session']) {
-  return createClient(
+// Cache for the Supabase client and the last used token
+let cachedSupabaseClient: SupabaseClient | null = null;
+let lastToken: string | null | undefined = undefined;
+
+
+function createClerkSupabaseClient(clerkToken: string) {
+  if (lastToken === clerkToken && !!cachedSupabaseClient) {
+    return cachedSupabaseClient;
+  }
+
+  lastToken = clerkToken;
+  const newClient = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_KEY!,
     {
       global: {
-        // Get the custom Supabase token from Clerk
         fetch: async (url, options = {}) => {
-          // The Clerk `session` object has the getToken() method      
-          const clerkToken = await session?.getToken({
-            // Pass the name of the JWT template you created in the Clerk Dashboard
-            // For this tutorial, you named it 'supabase'
-            template: 'supabase',
-          })
-
           // Insert the Clerk Supabase token into the headers
           const headers = new Headers(options?.headers)
           headers.set('Authorization', `Bearer ${clerkToken}`)
@@ -29,7 +31,10 @@ function createClerkSupabaseClient(session: UseSessionReturn['session']) {
         },
       },
     },
-  )
+  );
+
+  cachedSupabaseClient = newClient;
+  return newClient;
 }
 
 export default createClerkSupabaseClient
