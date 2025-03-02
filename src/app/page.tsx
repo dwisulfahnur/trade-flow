@@ -133,11 +133,11 @@ export default function IndexPage() {
             </SimpleGrid>
           </Container>
         </Center>
-        <Center flexDirection={'column'} gap={1} w='full' h='300px' bg={useColorModeValue('gray.800', 'gray.200')}>
+        <Center flexDirection={'column'} gap={1} w='full' h='300px' bg={useColorModeValue('gray.700', 'gray.500')}>
           <Container maxW={'container.xl'}>
             <VStack gap={4} alignItems={'center'}>
-              <Heading fontSize={'4xl'} fontWeight={500} textAlign={'center'} color={useColorModeValue('gray.200', 'gray.500')}>Ready to Improve Your Trading?</Heading>
-              <Text fontSize={'xl'} fontWeight={400} color={useColorModeValue('gray.200', 'gray.500')} textAlign={'center'}>Join the thousands of traders who have already improved their trading performance with TradeFlow.</Text>
+              <Heading fontSize={'4xl'} fontWeight={500} textAlign={'center'} color={useColorModeValue('gray.200', 'gray.100')}>Ready to Improve Your Trading?</Heading>
+              <Text fontSize={'xl'} fontWeight={400} color={useColorModeValue('gray.200', 'gray.100')} textAlign={'center'}>Join the thousands of traders who have already improved their trading performance with TradeFlow.</Text>
               <NextLink href={'/auth/sign-in'}>
                 <Button variant={'outline'} bg={useColorModeValue('gray.200', 'gray.900')} alignItems={'center'} gap={2} px={8}>
                   Get Started Now
