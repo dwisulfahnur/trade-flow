@@ -2,12 +2,14 @@
 
 import {
   Button,
-  Field,
   Input,
-  Text,
   VStack,
   Textarea,
+  NativeSelect,
   HStack,
+  Text,
+  Box,
+  SimpleGrid,
 } from "@chakra-ui/react";
 import {
   DialogRoot,
@@ -18,191 +20,367 @@ import {
   DialogFooter,
   DialogActionTrigger
 } from "@/components/ui/dialog";
-import { useForm, Controller } from "react-hook-form";
-import { RadioGroup, Radio } from "../ui/radio";
+import { Field } from "../ui/field";
+import { NumberInputField, NumberInputRoot } from "../ui/number-input";
+import { Checkbox } from "../ui/checkbox";
+import { useForm } from "react-hook-form";
+import { useEffect, useState } from "react";
+import { useSession } from "@clerk/nextjs";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Toaster, toaster } from "../ui/toaster";
+import UserTradesService, { Trade, TradeInput } from "@/services/supabase/userTrades";
+import { useColorModeValue } from "@/components/ui/color-mode";
 
 interface TradeJournalFormProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: any) => void;
+  onSubmit?: (data: any) => void;
+  initialData?: Trade;
 }
 
-export default function TradeJournalForm({ open, onClose, onSubmit }: TradeJournalFormProps) {
+export default function TradeJournalForm({ open, onClose, initialData }: TradeJournalFormProps) {
+  const { session } = useSession();
+  const tradesService = new UserTradesService(session);
+  const queryClient = useQueryClient();
+
+  // State to track if detailed fields should be shown
+  const [showDetailedFields, setShowDetailedFields] = useState(false);
+
+  // Theme colors
+  const hintColor = useColorModeValue("gray.500", "gray.400");
+
   const {
     register,
     handleSubmit,
-    control,
     reset,
+    watch,
+    setValue,
     formState: { errors }
-  } = useForm<{
-    date: string,
-    symbol: string
-    type: 'buy' | 'sell'
-    amount: number
-    entryPrice: number
-    exitPrice: number
-    notes: string
-  }>();
-
-  const handleFormSubmit = (data: any) => {
-    // Calculate PnL
-    const amount = parseFloat(data.amount);
-    const entryPrice = parseFloat(data.entryPrice);
-    const exitPrice = parseFloat(data.exitPrice);
-
-    let pnl = 0;
-    if (data.type === 'buy') {
-      pnl = (exitPrice - entryPrice) * amount;
-    } else {
-      pnl = (entryPrice - exitPrice) * amount;
+  } = useForm<TradeInput & { fee?: number }>({
+    defaultValues: {
+      symbol: '',
+      type: 'buy',
+      amount: undefined,
+      entry_price: undefined,
+      exit_price: undefined,
+      pnl: 0,
+      fee: undefined,
+      notes: '',
+      date: new Date().toISOString().split('T')[0],
     }
+  });
 
-    onSubmit({
-      ...data,
-      amount: parseFloat(data.amount),
-      entryPrice: parseFloat(data.entryPrice),
-      exitPrice: parseFloat(data.exitPrice),
-      pnl: parseFloat(pnl.toFixed(2))
-    });
+  // Watch values for calculation
+  const watchType = watch('type');
+  const watchAmount = watch('amount');
+  const watchEntryPrice = watch('entry_price');
+  const watchExitPrice = watch('exit_price');
+  const watchFee = watch('fee');
 
-    reset();
-  };
+  // Set form values when editing
+  useEffect(() => {
+    if (initialData) {
+      setValue('symbol', initialData.symbol);
+      setValue('type', initialData.type);
+      setValue('amount', initialData.amount);
+      setValue('entry_price', initialData.entry_price);
+      setValue('exit_price', initialData.exit_price);
+      setValue('pnl', initialData.pnl);
+      setValue('fee', initialData.fee);
+      setValue('notes', initialData.notes || '');
+      setValue('date', initialData.date);
+
+      // If any of the detailed fields have values, show the detailed section
+      if (initialData.amount || initialData.entry_price || initialData.exit_price || initialData.fee) {
+        setShowDetailedFields(true);
+      }
+    }
+  }, [initialData, setValue]);
+
+  // Calculate PnL when detailed fields change
+  useEffect(() => {
+    if (showDetailedFields && watchAmount && watchEntryPrice && watchExitPrice) {
+      let calculatedPnl = 0;
+
+      if (watchType === 'buy') {
+        calculatedPnl = (watchExitPrice - watchEntryPrice) * watchAmount;
+      } else {
+        calculatedPnl = (watchEntryPrice - watchExitPrice) * watchAmount;
+      }
+
+      // Subtract fee if provided
+      if (watchFee) {
+        calculatedPnl -= watchFee;
+      }
+
+      setValue('pnl', calculatedPnl);
+    }
+  }, [watchType, watchAmount, watchEntryPrice, watchExitPrice, watchFee, showDetailedFields, setValue]);
 
   const handleClose = () => {
     reset();
+    setShowDetailedFields(false);
     onClose();
   };
 
+  const { mutate: createTrade, isPending: isCreatingTrade } = useMutation({
+    mutationFn: (data: TradeInput & { fee?: number }) => {
+      // Extract fee from the form data
+      const { fee, ...tradeData } = data;
+
+      // Add fee to the database if provided
+      if (fee !== undefined) {
+        return tradesService.createTrade({
+          ...tradeData,
+          fee
+        });
+      }
+
+      return tradesService.createTrade(tradeData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trades'] });
+      toaster.create({
+        title: 'Trade created',
+        description: 'Trade created successfully',
+        type: 'success',
+      });
+      handleClose();
+    },
+    onError: (error) => {
+      console.error(error);
+      toaster.create({
+        title: 'Error creating trade',
+        description: 'Failed to create trade',
+        type: 'error',
+      });
+    }
+  });
+
+  const { mutate: updateTrade, isPending: isUpdatingTrade } = useMutation({
+    mutationFn: ({ id, data }: { id: string, data: Partial<TradeInput> & { fee?: number } }) => {
+      // Extract fee from the form data
+      const { fee, ...tradeData } = data;
+
+      // Add fee to the database if provided
+      if (fee !== undefined) {
+        return tradesService.updateTrade(id, {
+          ...tradeData,
+          fee
+        });
+      }
+
+      return tradesService.updateTrade(id, tradeData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['trades'] });
+      toaster.create({
+        title: 'Trade updated',
+        description: 'Trade updated successfully',
+        type: 'success',
+      });
+      handleClose();
+    },
+    onError: (error) => {
+      console.error(error);
+      toaster.create({
+        title: 'Error updating trade',
+        description: 'Failed to update trade',
+        type: 'error',
+      });
+    }
+  });
+
+  const onFormSubmit = (data: TradeInput & { fee?: number }) => {
+    if (initialData?.id) {
+      updateTrade({ id: initialData.id, data });
+    } else {
+      createTrade(data);
+    }
+  };
+
   return (
-    <DialogRoot open={open} onOpenChange={handleClose}>
-      <DialogContent>
-        <form onSubmit={handleSubmit(handleFormSubmit)}>
+    <>
+      <DialogRoot open={open} onOpenChange={(details) => !details.open && handleClose()}>
+        <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add New Trade</DialogTitle>
+            <DialogTitle>{initialData ? 'Edit Trade' : 'Add Trade'}</DialogTitle>
           </DialogHeader>
-          <DialogBody>
-            <VStack spaceY={4} align="stretch">
-              <Field.Root invalid={!!errors.date}>
-                <Field.Label>
-                  <Text fontSize="sm" fontWeight="medium">Date</Text>
-                  <Field.RequiredIndicator />
-                </Field.Label>
-                <Input
-                  type="date"
-                  {...register('date', { required: 'Date is required' })}
-                />
-                {errors.date && <Field.ErrorText>{errors.date.message}</Field.ErrorText>}
-              </Field.Root>
+          <form onSubmit={handleSubmit(onFormSubmit)}>
+            <DialogBody>
+              <VStack spaceY={4} align="stretch">
+                <Field
+                  label="Symbol"
+                  invalid={!!errors.symbol}
+                  errorText={errors.symbol?.message?.toString()}
+                >
+                  <Input
+                    {...register('symbol', { required: 'Symbol is required' })}
+                    placeholder="BTC/USDT"
+                  />
+                </Field>
 
-              <Field.Root invalid={!!errors.symbol}>
-                <Field.Label>
-                  <Text fontSize="sm" fontWeight="medium">Symbol</Text>
-                  <Field.RequiredIndicator />
-                </Field.Label>
-                <Input
-                  placeholder="BTC/USDT"
-                  {...register('symbol', { required: 'Symbol is required' })}
-                />
-                {errors.symbol && <Field.ErrorText>{errors.symbol.message}</Field.ErrorText>}
-              </Field.Root>
+                <Field
+                  label="Type"
+                  invalid={!!errors.type}
+                  errorText={errors.type?.message?.toString()}
+                >
+                  <NativeSelect.Root {...register('type', { required: 'Type is required' })}>
+                    <NativeSelect.Field>
+                      <option value="buy">Buy</option>
+                      <option value="sell">Sell</option>
+                    </NativeSelect.Field>
+                    <NativeSelect.Indicator />
+                  </NativeSelect.Root>
+                </Field>
 
-              <Field.Root>
-                <Field.Label>
-                  <Text fontSize="sm" fontWeight="medium">Trade Type</Text>
-                  <Field.RequiredIndicator />
-                </Field.Label>
-                <Controller
-                  name="type"
-                  control={control}
-                  render={({ field }) => (
-                    <RadioGroup
-                      name={field.name}
-                      value={field.value}
-                      onValueChange={({ value }) => field.onChange(value)}
-                    >
-                      <HStack spaceX={4}>
-                        <Radio value="buy">Buy (Long)</Radio>
-                        <Radio value="sell">Sell (Short)</Radio>
-                      </HStack>
-                    </RadioGroup>
+                <Field>
+                  <Checkbox
+                    checked={showDetailedFields}
+                    onCheckedChange={(e) => setShowDetailedFields(!!e.checked)}
+                  >
+                    Add detailed trade information
+                  </Checkbox>
+                </Field>
+
+                {showDetailedFields && (
+                  <Box
+                    p={3}
+                    borderWidth="1px"
+                    borderRadius="md"
+                    borderStyle="dashed"
+                  >
+                    <SimpleGrid columns={2} gap={3}>
+                      <Field
+                        label="Entry Price"
+                        invalid={!!errors.entry_price}
+                        errorText={errors.entry_price?.message?.toString()}
+                      >
+                        <NumberInputRoot min={0} size='sm'>
+                          <NumberInputField
+                            {...register('entry_price', {
+                              valueAsNumber: true,
+                              min: { value: 0, message: 'Entry price must be positive' }
+                            })}
+                            placeholder="Optional"
+                          />
+                        </NumberInputRoot>
+                      </Field>
+
+                      <Field
+                        label="Exit Price"
+                        invalid={!!errors.exit_price}
+                        errorText={errors.exit_price?.message?.toString()}
+                      >
+                        <NumberInputRoot min={0} size='sm'>
+                          <NumberInputField
+                            {...register('exit_price', {
+                              valueAsNumber: true,
+                              min: { value: 0, message: 'Exit price must be positive' }
+                            })}
+                            placeholder="Optional"
+                          />
+                        </NumberInputRoot>
+                      </Field>
+
+                      <Field
+                        label="Amount"
+                        invalid={!!errors.amount}
+                        errorText={errors.amount?.message?.toString()}
+                      >
+                        <NumberInputRoot min={0} size='sm'>
+                          <NumberInputField
+                            {...register('amount', {
+                              valueAsNumber: true,
+                              min: { value: 0, message: 'Amount must be positive' }
+                            })}
+                            placeholder="Optional"
+                          />
+                        </NumberInputRoot>
+                      </Field>
+
+                      <Field
+                        label="Fee"
+                        invalid={!!errors.fee}
+                        errorText={errors.fee?.message?.toString()}
+                      >
+                        <NumberInputRoot min={0} size='sm'>
+                          <NumberInputField
+                            {...register('fee', {
+                              valueAsNumber: true,
+                              min: { value: 0, message: 'Fee must be positive' }
+                            })}
+                            placeholder="Optional"
+                          />
+                        </NumberInputRoot>
+                      </Field>
+                    </SimpleGrid>
+                  </Box>
+                )}
+
+                <Field
+                  label="P&L"
+                  invalid={!!errors.pnl}
+                  errorText={errors.pnl?.message?.toString()}
+                >
+                  <NumberInputRoot>
+                    <NumberInputField
+                      {...register('pnl', {
+                        required: 'P&L is required',
+                        valueAsNumber: true,
+                      })}
+                      disabled={!!(showDetailedFields && watchAmount && watchEntryPrice && watchExitPrice)}
+                    />
+                  </NumberInputRoot>
+                  {showDetailedFields && watchAmount && watchEntryPrice && watchExitPrice && (
+                    <Text fontSize="xs" color={hintColor} mt={1}>
+                      P&L is calculated automatically from trade details
+                    </Text>
                   )}
-                />
-              </Field.Root>
+                </Field>
 
-              <Field.Root invalid={!!errors.amount}>
-                <Field.Label>
-                  <Text fontSize="sm" fontWeight="medium">Amount</Text>
-                  <Field.RequiredIndicator />
-                </Field.Label>
-                <Input
-                  type="number"
-                  step="any"
-                  placeholder="0.5"
-                  {...register('amount', {
-                    required: 'Amount is required',
-                    valueAsNumber: true,
-                    validate: value => value > 0 || 'Amount must be greater than 0'
-                  })}
-                />
-                {errors.amount && <Field.ErrorText>{errors.amount.message}</Field.ErrorText>}
-              </Field.Root>
+                <Field
+                  label="Date"
+                  invalid={!!errors.date}
+                  errorText={errors.date?.message?.toString()}
+                >
+                  <Input
+                    type="date"
+                    {...register('date', { required: 'Date is required' })}
+                  />
+                </Field>
 
-              <Field.Root invalid={!!errors.entryPrice}>
-                <Field.Label>
-                  <Text fontSize="sm" fontWeight="medium">Entry Price</Text>
-                  <Field.RequiredIndicator />
-                </Field.Label>
-                <Input
-                  type="number"
-                  step="any"
-                  placeholder="42000"
-                  {...register('entryPrice', {
-                    required: 'Entry price is required',
-                    valueAsNumber: true,
-                    validate: value => value > 0 || 'Price must be greater than 0'
-                  })}
-                />
-                {errors.entryPrice && <Field.ErrorText>{errors.entryPrice.message}</Field.ErrorText>}
-              </Field.Root>
-
-              <Field.Root invalid={!!errors.exitPrice}>
-                <Field.Label>
-                  <Text fontSize="sm" fontWeight="medium">Exit Price</Text>
-                  <Field.RequiredIndicator />
-                </Field.Label>
-                <Input
-                  type="number"
-                  step="any"
-                  placeholder="43000"
-                  {...register('exitPrice', {
-                    required: 'Exit price is required',
-                    valueAsNumber: true,
-                    validate: value => value > 0 || 'Price must be greater than 0'
-                  })}
-                />
-                {errors.exitPrice && <Field.ErrorText>{errors.exitPrice.message}</Field.ErrorText>}
-              </Field.Root>
-
-              <Field.Root>
-                <Field.Label>
-                  <Text fontSize="sm" fontWeight="medium">Notes</Text>
-                </Field.Label>
-                <Textarea
-                  placeholder="Why did you take this trade? What was your strategy?"
-                  rows={3}
-                  {...register('notes')}
-                />
-              </Field.Root>
-            </VStack>
-          </DialogBody>
-          <DialogFooter>
-            <DialogActionTrigger asChild>
-              <Button colorPalette="red" variant="surface" size="xs">Cancel</Button>
-            </DialogActionTrigger>
-            <Button type="submit" colorPalette="blue" variant="surface" size="xs">Save Trade</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </DialogRoot>
+                <Field
+                  label="Notes"
+                  invalid={!!errors.notes}
+                  errorText={errors.notes?.message?.toString()}
+                >
+                  <Textarea
+                    {...register('notes')}
+                    placeholder="Add your trade notes here..."
+                    rows={3}
+                  />
+                </Field>
+              </VStack>
+            </DialogBody>
+            <DialogFooter>
+              <DialogActionTrigger asChild>
+                <Button colorPalette={"white"} variant={'solid'} size={'xs'}>Cancel</Button>
+              </DialogActionTrigger>
+              <Button
+                type="submit"
+                colorPalette={"blue"}
+                variant={'solid'}
+                size={'xs'}
+                loading={isCreatingTrade || isUpdatingTrade}
+              >
+                {initialData ? 'Update' : 'Save'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </DialogRoot>
+      <Toaster />
+    </>
   );
 } 

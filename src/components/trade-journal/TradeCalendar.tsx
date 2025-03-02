@@ -17,24 +17,14 @@ import {
 import { Tooltip } from "@/components/ui/tooltip";
 import { FiChevronLeft, FiChevronRight, FiInfo } from "react-icons/fi";
 import { useColorModeValue } from "@/components/ui/color-mode";
-
-interface Trade {
-  id: number;
-  date: string;
-  symbol: string;
-  type: string;
-  amount: number;
-  entryPrice: number;
-  exitPrice: number;
-  pnl: number;
-  notes: string;
-}
+import { Trade } from "@/services/supabase/userTrades";
 
 interface TradeCalendarProps {
   trades: Trade[];
+  onEditTrade: (trade: Trade) => void;
 }
 
-export default function TradeCalendar({ trades }: TradeCalendarProps) {
+export default function TradeCalendar({ trades, onEditTrade }: TradeCalendarProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   // Define all theme colors using useColorModeValue at the top
@@ -109,7 +99,8 @@ export default function TradeCalendar({ trades }: TradeCalendarProps) {
     return {
       pnl,
       tradesCount,
-      hasActivity: tradesCount > 0
+      hasActivity: tradesCount > 0,
+      trades: dayTrades
     };
   };
 
@@ -139,6 +130,19 @@ export default function TradeCalendar({ trades }: TradeCalendarProps) {
       }
     }
   }
+
+  // Handle day click to show trades
+  const handleDayClick = (day: number) => {
+    const { trades: dayTrades } = getDayStats(day);
+    if (dayTrades.length === 1) {
+      // If there's only one trade, open it directly
+      onEditTrade(dayTrades[0]);
+    } else if (dayTrades.length > 1) {
+      // If there are multiple trades, you could show a list or open the first one
+      // For now, we'll just open the first one
+      onEditTrade(dayTrades[0]);
+    }
+  };
 
   return (
     <Card.Root bg={colors.cardBg} borderColor={colors.borderColor}>
@@ -217,6 +221,9 @@ export default function TradeCalendar({ trades }: TradeCalendarProps) {
                 minH="80px"
                 border="1px solid"
                 borderColor={colors.borderColor}
+                cursor={hasActivity ? "pointer" : "default"}
+                onClick={hasActivity ? () => handleDayClick(day) : undefined}
+                _hover={hasActivity ? { opacity: 0.8 } : undefined}
               >
                 <Text fontWeight={isToday(day) ? "bold" : "normal"} color={textColor}>
                   {day}
@@ -246,7 +253,7 @@ export default function TradeCalendar({ trades }: TradeCalendarProps) {
         <Flex justifyContent="flex-end" mt={4} alignItems="center">
           <Icon as={FiInfo} mr={2} color={colors.secondaryText} />
           <Text fontSize="sm" color={colors.secondaryText}>
-            Green: Profitable day | Red: Unprofitable day
+            Green: Profitable day | Red: Unprofitable day | Click on a day to view trades
           </Text>
         </Flex>
       </Card.Body>
