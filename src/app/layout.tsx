@@ -8,6 +8,13 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'TradeFlow | Track your trades',
     description: 'TradeFlow is a tool that helps you track your trades and analyze your trading performance.',
+    images: [
+      {
+        url: '/dashboard/home.png',
+        width: 1200,
+        height: 630,
+      },
+    ],
   },
 }
 
